@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import View, Button
 
-TOKEN = "YOUR_BOT_TOKEN"  # ⬅️ Replace with your bot token
+TOKEN = "YOUR_BOT_TOKEN"  # ⬅️ Replace with your token
 
 intents = discord.Intents.default()
 intents.members = True
@@ -20,7 +20,7 @@ class MyBot(commands.Bot):
 bot = MyBot()
 
 # ======================
-# 🧰 Auto Create Verified Role
+# 🧰 Verified Role
 # ======================
 async def get_or_create_verified_role(guild: discord.Guild) -> discord.Role:
     role = discord.utils.get(guild.roles, name="Verified")
@@ -33,13 +33,17 @@ async def get_or_create_verified_role(guild: discord.Guild) -> discord.Role:
     return role
 
 # ======================
-# 🔐 Verification System
+# 🔐 Verification View
 # ======================
 class VerifyButton(View):
     def __init__(self):
-        super().__init__(timeout=None)
+        super().__init__(timeout=None)  # persistent view
 
-    @discord.ui.button(label="✅ Verify", style=discord.ButtonStyle.success)
+    @discord.ui.button(
+        label="✅ Verify",
+        style=discord.ButtonStyle.success,
+        custom_id="verify_button"  # 👈 required for persistent view
+    )
     async def verify(self, interaction: discord.Interaction, button: Button):
         member = interaction.user
         guild = interaction.guild
@@ -58,7 +62,7 @@ class VerifyButton(View):
 @bot.event
 async def on_ready():
     print(f"🤖 Logged in as {bot.user}")
-    bot.add_view(VerifyButton())
+    bot.add_view(VerifyButton())  # 👈 no error now
 
 @bot.tree.command(name="setupverify", description="Create the verification panel.")
 @app_commands.checks.has_permissions(administrator=True)
@@ -71,17 +75,17 @@ async def setupverify(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, view=VerifyButton())
 
 # ======================
-# 🛡️ Moderation Commands
+# 🛡️ Moderation
 # ======================
 @bot.tree.command(name="kick", description="Kick a member.")
-@app_commands.describe(member="The member to kick", reason="Reason for kicking")
+@app_commands.describe(member="Member to kick", reason="Reason")
 @app_commands.checks.has_permissions(kick_members=True)
 async def kick(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason"):
     await member.kick(reason=reason)
     await interaction.response.send_message(f"👢 {member} kicked. Reason: {reason}")
 
 @bot.tree.command(name="ban", description="Ban a member.")
-@app_commands.describe(member="The member to ban", reason="Reason for banning")
+@app_commands.describe(member="Member to ban", reason="Reason")
 @app_commands.checks.has_permissions(ban_members=True)
 async def ban(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason"):
     await member.ban(reason=reason)
@@ -149,7 +153,7 @@ async def help_cmd(interaction: discord.Interaction):
         ),
         inline=False
     )
-    embed.set_footer(text="Bot works on multiple servers automatically. Made with ❤️ using discord.py")
+    embed.set_footer(text="✨ Works on multiple servers without setup")
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 bot.run(TOKEN)
